@@ -1,10 +1,10 @@
 import Link from "next/link";
+import { LandingNavbar } from "@/components/LandingNavbar";
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { 
-  ArrowRight, 
   CheckCircle2, 
   Layout, 
   Zap, 
@@ -13,46 +13,26 @@ import {
   Shield, 
   Sparkles,
   MousePointer2,
-  Layers
+  Layers,
+  Github
 } from "lucide-react";
 
 export default function HomePage() {
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col font-sans selection:bg-primary/10">
-      {/* Navbar */}
-      <header className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur-md supports-[backdrop-filter]:bg-background/60">
-        <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2 font-bold text-xl tracking-tight hover:opacity-90 transition-opacity">
-            <div className="p-1.5 rounded-lg bg-primary text-primary-foreground">
-              <Layout className="h-5 w-5" />
-            </div>
-            <span>FormGen AI</span>
-          </Link>
-          
-          <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-muted-foreground">
-            <Link href="#features" className="hover:text-foreground transition-colors">Features</Link>
-            <Link href="#how-it-works" className="hover:text-foreground transition-colors">How it Works</Link>
-            <Link href="#pricing" className="hover:text-foreground transition-colors">Pricing</Link>
-          </nav>
-          
-          <div className="flex items-center gap-4">
-            <Link href="/login" className="hidden sm:block">
-              <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">Log in</Button>
-            </Link>
-            <Link href="/register">
-              <Button size="sm" className="font-medium rounded-full px-6">
-                Get Started
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </header>
+      <LandingNavbar />
 
       <main className="flex-1">
         {/* Hero Section */}
         <section className="container mx-auto px-4 py-24 md:py-32 text-center max-w-5xl">
           <div className="flex flex-col items-center gap-8 animate-fade-in">
+            <Link href="https://github.com/SHIVATANDAV64/Intern_Task" target="_blank">
+              <Badge variant="outline" className="px-4 py-1.5 text-sm font-medium rounded-full border-primary/20 bg-primary/5 hover:bg-primary/10 transition-colors cursor-pointer">
+                <Github className="mr-2 h-3.5 w-3.5 inline-block" />
+                Open Source on GitHub
+              </Badge>
+            </Link>
+
             <Badge variant="secondary" className="px-4 py-1.5 text-sm font-medium rounded-full border bg-muted/50 hover:bg-muted transition-colors cursor-default">
               <Sparkles className="mr-2 h-3.5 w-3.5 inline-block text-primary" />
               Reimagining Form Creation with AI
@@ -333,10 +313,9 @@ export default function HomePage() {
           <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-muted-foreground">
             <p>© 2025 FormGen AI. All rights reserved.</p>
             <div className="flex gap-6">
-              <Link href="#" className="hover:text-foreground transition-colors">Twitter</Link>
-              <Link href="#" className="hover:text-foreground transition-colors">GitHub</Link>
-              <Link href="#" className="hover:text-foreground transition-colors">Discord</Link>
-              <Link href="#" className="hover:text-foreground transition-colors">LinkedIn</Link>
+              <Link href="https://github.com/SHIVATANDAV64" target="_blank" className="hover:text-foreground transition-colors">GitHub</Link>
+              <Link href="https://www.linkedin.com/in/venkatreddy64/" target="_blank" className="hover:text-foreground transition-colors">LinkedIn</Link>
+              <Link href="mailto:rudrashiva654@gmail.com" className="hover:text-foreground transition-colors">Contact</Link>
             </div>
           </div>
         </div>

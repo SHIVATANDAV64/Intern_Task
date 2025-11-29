@@ -1,5 +1,8 @@
 # FormGen AI - Intelligent Dynamic Form Generator
 
+- **Repository:** [https://github.com/SHIVATANDAV64/Intern_Task](https://github.com/SHIVATANDAV64/Intern_Task)
+- **Live Demo:** [https://intern-task-pi-wheat.vercel.app/](https://intern-task-pi-wheat.vercel.app/)
+
 ## 🚀 Project Overview
 
 **FormGen AI** is a full-stack web application that leverages Generative AI to create dynamic, shareable forms from natural language prompts. It features a context-aware memory system that learns from your past forms to generate increasingly relevant schemas. Built with Next.js 15, Express, MongoDB, and Google Gemini, it offers a robust solution for form management, data collection, and automated workflows.
