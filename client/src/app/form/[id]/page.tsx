@@ -77,14 +77,22 @@ export default function PublicFormPage({ params }: { params: Promise<{ id: strin
     try {
       // Create FormData for submission
       const formData = new FormData();
-      formData.append('responses', JSON.stringify(data));
-
-      // Add files
+      
+      // Add file field IDs to responses so server knows which fields have files
+      const responsesWithFileInfo = { ...data };
+      const fileFieldMapping: Record<string, string> = {};
+      
+      // Add files and track their field IDs
       for (const [fieldId, { file }] of Object.entries(uploadedFiles)) {
-        formData.append('files', file, file.name);
-        // Also append the fieldId mapping
-        formData.append(fieldId, file, file.name);
+        // Create a unique filename that includes the fieldId
+        const uniqueFilename = `${fieldId}___${file.name}`;
+        formData.append('files', file, uniqueFilename);
+        fileFieldMapping[fieldId] = uniqueFilename;
       }
+      
+      // Include file field mapping in responses
+      formData.append('responses', JSON.stringify(responsesWithFileInfo));
+      formData.append('fileFieldMapping', JSON.stringify(fileFieldMapping));
 
       await submissionsApi.submit(id, formData);
       setIsSubmitted(true);

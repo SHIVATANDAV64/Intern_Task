@@ -52,6 +52,18 @@ router.post(
       // Handle file uploads
       const imageUrls: Record<string, string> = {};
       const files = req.files as Express.Multer.File[];
+      
+      // Parse file field mapping from client
+      let fileFieldMapping: Record<string, string> = {};
+      if (req.body.fileFieldMapping) {
+        try {
+          fileFieldMapping = typeof req.body.fileFieldMapping === 'string'
+            ? JSON.parse(req.body.fileFieldMapping)
+            : req.body.fileFieldMapping;
+        } catch (e) {
+          console.error('Failed to parse fileFieldMapping:', e);
+        }
+      }
 
       if (files && files.length > 0) {
         for (const file of files) {
@@ -61,8 +73,14 @@ router.post(
               `formgen/submissions/${form._id}`,
               file.mimetype.startsWith('image/') ? 'image' : 'raw'
             );
-            // Use the fieldname as key (e.g., "field-profile-picture")
-            imageUrls[file.fieldname] = result.url;
+            
+            // Extract fieldId from the filename (format: fieldId___originalName)
+            const originalName = file.originalname;
+            const fieldId = Object.entries(fileFieldMapping).find(
+              ([, filename]) => filename === originalName
+            )?.[0] || originalName.split('___')[0];
+            
+            imageUrls[fieldId] = result.url;
           } catch (uploadError) {
             console.error('File upload error:', uploadError);
           }

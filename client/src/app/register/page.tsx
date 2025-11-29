@@ -55,14 +55,20 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-background to-muted p-4">
-      <Card className="w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center p-4 bg-background relative overflow-hidden">
+      {/* Background Gradients */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[600px] bg-primary/20 rounded-full blur-[120px] -z-10 opacity-50" />
+      <div className="absolute bottom-0 right-0 w-[800px] h-[600px] bg-secondary/20 rounded-full blur-[100px] -z-10 opacity-30" />
+
+      <Card className="w-full max-w-md glass border-white/10 shadow-2xl animate-scale-in">
         <CardHeader className="text-center">
-          <Link href="/" className="flex items-center justify-center gap-2 mb-4">
-            <Sparkles className="h-8 w-8 text-primary" />
-            <span className="text-2xl font-bold">FormGen AI</span>
+          <Link href="/" className="flex items-center justify-center gap-2 mb-6">
+            <div className="p-2 rounded-xl bg-primary/10">
+              <Sparkles className="h-6 w-6 text-primary" />
+            </div>
+            <span className="text-2xl font-bold tracking-tight">FormGen AI</span>
           </Link>
-          <CardTitle>Create Account</CardTitle>
+          <CardTitle className="text-xl">Create Account</CardTitle>
           <CardDescription>Start creating AI-powered forms today</CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit(onSubmit)}>
@@ -74,6 +80,7 @@ export default function RegisterPage() {
                 type="text"
                 placeholder="John Doe"
                 {...register('name')}
+                className="bg-white/5 border-white/10 focus:border-primary/50 transition-colors"
               />
               {errors.name && (
                 <p className="text-sm text-destructive">{errors.name.message}</p>
@@ -86,6 +93,7 @@ export default function RegisterPage() {
                 type="email"
                 placeholder="you@example.com"
                 {...register('email')}
+                className="bg-white/5 border-white/10 focus:border-primary/50 transition-colors"
               />
               {errors.email && (
                 <p className="text-sm text-destructive">{errors.email.message}</p>
@@ -98,6 +106,7 @@ export default function RegisterPage() {
                 type="password"
                 placeholder="••••••••"
                 {...register('password')}
+                className="bg-white/5 border-white/10 focus:border-primary/50 transition-colors"
               />
               {errors.password && (
                 <p className="text-sm text-destructive">{errors.password.message}</p>
@@ -110,6 +119,7 @@ export default function RegisterPage() {
                 type="password"
                 placeholder="••••••••"
                 {...register('confirmPassword')}
+                className="bg-white/5 border-white/10 focus:border-primary/50 transition-colors"
               />
               {errors.confirmPassword && (
                 <p className="text-sm text-destructive">{errors.confirmPassword.message}</p>
@@ -117,7 +127,7 @@ export default function RegisterPage() {
             </div>
           </CardContent>
           <CardFooter className="flex flex-col gap-4">
-            <Button type="submit" className="w-full" disabled={isLoading}>
+            <Button type="submit" className="w-full h-11 shadow-lg shadow-primary/20" disabled={isLoading}>
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -129,7 +139,7 @@ export default function RegisterPage() {
             </Button>
             <p className="text-sm text-muted-foreground text-center">
               Already have an account?{' '}
-              <Link href="/login" className="text-primary hover:underline">
+              <Link href="/login" className="text-primary hover:underline font-medium">
                 Sign in
               </Link>
             </p>
