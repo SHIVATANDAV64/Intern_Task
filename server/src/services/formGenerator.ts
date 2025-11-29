@@ -38,7 +38,7 @@ interface GeneratedForm {
  * - Metadata filtering allows user-scoped searches without full scans
  */
 export class SemanticMemoryService {
-  private embeddingModel = 'text-embedding-004';
+  private embeddingModel = process.env.GEMINI_EMBEDDING_MODEL || 'text-embedding-004';
   private topK = Number(process.env.PINECONE_TOP_K || 5); // Number of relevant forms to retrieve
   private cache = new Map<string, { ts: number; results: FormContext[] }>();
   private cacheTTL = 30 * 1000; // 30s TTL
@@ -47,17 +47,36 @@ export class SemanticMemoryService {
    * Generate embedding for text using Gemini's embedding model
    */
   async generateEmbedding(text: string): Promise<number[]> {
+    // If switching to Pinecone-hosted embedding model
+    if (process.env.EMBEDDING_PROVIDER === 'pinecone') {
+      const model = process.env.EMBEDDING_MODEL || 'llama-text-embed-v2';
+      const apiKey = process.env.PINECONE_API_KEY;
+      if (!apiKey) throw new Error('PINECONE_API_KEY is required for Pinecone embeddings');
+      const resp = await fetch('https://api.pinecone.io/inference/v1/embed', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Api-Key': apiKey,
+        },
+        body: JSON.stringify({ model, inputs: [text] }),
+      });
+      if (!resp.ok) {
+        const body = await resp.text();
+        throw new Error(`Pinecone embedding request failed: ${resp.status} ${body}`);
+      }
+      const data = await resp.json();
+      // Pinecone inference responses may use data[0].values or embeddings[0].values depending on version
+      const values = data?.data?.[0]?.values || data?.embeddings?.[0]?.values;
+      if (!values) throw new Error('Malformed Pinecone embedding response');
+      return values;
+    }
+    // Default Gemini embedding path
     const client = getGeminiClient();
-    
     const response = await client.models.embedContent({
       model: this.embeddingModel,
       contents: [{ role: 'user', parts: [{ text }] }],
     });
-
-    if (!response.embeddings || response.embeddings.length === 0) {
-      throw new Error('Failed to generate embedding');
-    }
-
+    if (!response.embeddings || response.embeddings.length === 0) throw new Error('Failed to generate embedding');
     return response.embeddings[0].values || [];
   }
 
@@ -196,7 +215,7 @@ export class SemanticMemoryService {
  */
 export class FormGeneratorService {
   private memoryService: SemanticMemoryService;
-  private model = 'gemini-2.0-flash';
+  private model = process.env.GEMINI_GENERATION_MODEL || 'gemini-2.0-flash';
 
   constructor() {
     this.memoryService = new SemanticMemoryService();
