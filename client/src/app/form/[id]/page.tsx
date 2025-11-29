@@ -106,9 +106,15 @@ export default function PublicFormPage({ params }: { params: Promise<{ id: strin
       });
     }
 
-    setVisibleFields(newVisible);
-    setRequiredFields(newRequired);
-  }, [form, watchedValues]);
+    setVisibleFields(prev => {
+      const isSame = prev.size === newVisible.size && [...prev].every(x => newVisible.has(x));
+      return isSame ? prev : newVisible;
+    });
+    setRequiredFields(prev => {
+      const isSame = prev.size === newRequired.size && [...prev].every(x => newRequired.has(x));
+      return isSame ? prev : newRequired;
+    });
+  }, [form, JSON.stringify(watchedValues)]);
 
   useEffect(() => {
     const fetchForm = async () => {

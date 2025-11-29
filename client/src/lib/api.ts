@@ -77,6 +77,11 @@ export const formsApi = {
     const response = await api.delete(`/forms/${id}`);
     return response.data;
   },
+
+  duplicate: async (id: string) => {
+    const response = await api.post(`/forms/${id}/duplicate`);
+    return response.data;
+  },
   
   getSubmissions: async (formId: string, page = 1, limit = 20) => {
     const response = await api.get(`/forms/${formId}/submissions`, { params: { page, limit } });

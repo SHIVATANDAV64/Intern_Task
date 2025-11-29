@@ -240,6 +240,7 @@ export function WebhookSettings({ formId, webhooks = [], onUpdate }: WebhookSett
             </DialogContent>
           </Dialog>
         </div>
+        </div>
       </CardHeader>
       <CardContent>
         {webhooks.length === 0 ? (
