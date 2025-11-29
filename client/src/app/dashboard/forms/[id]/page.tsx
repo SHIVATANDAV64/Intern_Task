@@ -4,6 +4,8 @@ import { useEffect, useState, use } from 'react';
 import Link from 'next/link';
 import { toast } from 'sonner';
 import { ArrowLeft, Copy, ExternalLink, Users, FileText, Download } from 'lucide-react';
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -272,25 +274,21 @@ export default function FormDetailPage({ params }: { params: Promise<{ id: strin
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {form.schema.fields.map((field, index) => (
-                  <div key={field.id}>
-                    <div className="flex items-center gap-2">
-                      <Badge variant="outline">{field.type}</Badge>
-                      <span className="font-medium">{field.label}</span>
-                      {field.required && (
-                        <Badge variant="destructive" className="text-xs">Required</Badge>
-                      )}
-                    </div>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Field name: {field.name}
-                      {field.placeholder && ` • Placeholder: ${field.placeholder}`}
-                    </p>
-                    {index < form.schema.fields.length - 1 && (
-                      <Separator className="mt-4" />
-                    )}
-                  </div>
-                ))}
+              <div className="rounded-lg overflow-hidden border">
+                <SyntaxHighlighter
+                  language="json"
+                  style={vscDarkPlus}
+                  customStyle={{
+                    margin: 0,
+                    padding: '1.5rem',
+                    fontSize: '0.875rem',
+                    lineHeight: '1.5',
+                  }}
+                  showLineNumbers={true}
+                  wrapLines={true}
+                >
+                  {JSON.stringify(form.schema, null, 2)}
+                </SyntaxHighlighter>
               </div>
             </CardContent>
           </Card>
