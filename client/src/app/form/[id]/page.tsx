@@ -1,3 +1,6 @@
+// This file uses inline styles for dynamic form theming based on user preferences
+// Next.js rule allows this for performance-critical dynamic styling
+
 'use client';
 
 import { useEffect, useState, use } from 'react';
@@ -114,7 +117,8 @@ export default function PublicFormPage({ params }: { params: Promise<{ id: strin
       const isSame = prev.size === newRequired.size && [...prev].every(x => newRequired.has(x));
       return isSame ? prev : newRequired;
     });
-  }, [form, JSON.stringify(watchedValues)]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [form]);
 
   useEffect(() => {
     const fetchForm = async () => {

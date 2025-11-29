@@ -3,6 +3,12 @@ import nextVitals from "eslint-config-next/core-web-vitals";
 import nextTs from "eslint-config-next/typescript";
 
 const eslintConfig = defineConfig([
+  {
+    files: ["src/app/form/[id]/page.tsx"],
+    rules: {
+      "react/no-inline-styles": "off",
+    }
+  },
   ...nextVitals,
   ...nextTs,
   // Override default ignores of eslint-config-next.

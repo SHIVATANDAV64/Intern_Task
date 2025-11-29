@@ -111,7 +111,7 @@ export function LogicSettings({ formId, fields, rules = [], onUpdate }: LogicSet
                     <Label>Condition</Label>
                     <Select 
                       value={rule.condition} 
-                      onValueChange={(val: any) => updateRule(rule.id, { condition: val })}
+                      onValueChange={(val: 'equals' | 'notEquals' | 'contains' | 'greaterThan' | 'lessThan') => updateRule(rule.id, { condition: val })}
                     >
                       <SelectTrigger>
                         <SelectValue />
@@ -141,7 +141,7 @@ export function LogicSettings({ formId, fields, rules = [], onUpdate }: LogicSet
                     <Label>Then Action</Label>
                     <Select 
                       value={rule.action} 
-                      onValueChange={(val: any) => updateRule(rule.id, { action: val })}
+                      onValueChange={(val: 'show' | 'hide' | 'require' | 'unrequire') => updateRule(rule.id, { action: val })}
                     >
                       <SelectTrigger>
                         <SelectValue />

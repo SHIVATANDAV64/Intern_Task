@@ -45,7 +45,7 @@ class EmailService {
           user: this.config.user,
           pass: this.config.pass,
         },
-      });
+      } as any);
     } catch (error) {
       console.error('Failed to initialize email transporter:', error);
       this.enabled = false;
@@ -68,6 +68,10 @@ class EmailService {
     }
 
     try {
+      // Verify connection before sending
+      if (this.transporter) {
+        await this.transporter.verify();
+      }
       const { recipients, subject, includeResponses } = form.emailNotifications;
       const recipientEmails = recipients && recipients.length > 0 ? recipients : [ownerEmail];
       
