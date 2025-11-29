@@ -73,6 +73,18 @@ export default function PublicFormPage({ params }: { params: Promise<{ id: strin
   };
 
   const onSubmit = async (data: Record<string, unknown>) => {
+    // Validate required file/image fields
+    if (form) {
+      for (const field of form.schema.fields) {
+        if ((field.type === 'file' || field.type === 'image') && field.required) {
+          if (!uploadedFiles[field.id]) {
+            toast.error(`${field.label} is required`);
+            return;
+          }
+        }
+      }
+    }
+
     setIsSubmitting(true);
     try {
       // Create FormData for submission
@@ -107,10 +119,13 @@ export default function PublicFormPage({ params }: { params: Promise<{ id: strin
   const renderField = (field: FormField) => {
     const fieldError = errors[field.name];
 
+    // For file/image fields, don't use register since they're handled separately
+    const isFileField = field.type === 'file' || field.type === 'image';
+    
     const commonProps = {
       id: field.id,
       placeholder: field.placeholder,
-      ...register(field.name, {
+      ...(isFileField ? {} : register(field.name, {
         required: field.required ? `${field.label} is required` : false,
         ...(field.validation?.minLength && {
           minLength: {
@@ -142,7 +157,7 @@ export default function PublicFormPage({ params }: { params: Promise<{ id: strin
             message: 'Invalid URL',
           },
         }),
-      }),
+      })),
     };
 
     switch (field.type) {
