@@ -40,5 +40,4 @@ coverage/
 # Misc
 *.tgz
 .vercel
-docs/
 .github
