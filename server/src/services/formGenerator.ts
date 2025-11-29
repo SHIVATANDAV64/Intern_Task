@@ -39,7 +39,7 @@ interface GeneratedForm {
  */
 export class SemanticMemoryService {
   private embeddingModel = 'text-embedding-004';
-  private topK = 5; // Number of relevant forms to retrieve
+  private topK = Number(process.env.PINECONE_TOP_K || 5); // Number of relevant forms to retrieve
   private cache = new Map<string, { ts: number; results: FormContext[] }>();
   private cacheTTL = 30 * 1000; // 30s TTL
 

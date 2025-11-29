@@ -24,7 +24,9 @@ export const initPinecone = async (): Promise<Pinecone> => {
 export const getPineconeIndex = async () => {
   const client = await initPinecone();
   const indexName = process.env.PINECONE_INDEX || 'form-embeddings';
-  return client.index(indexName);
+  const namespace = process.env.PINECONE_NAMESPACE;
+  const baseIndex = client.index(indexName);
+  return namespace ? baseIndex.namespace(namespace) : baseIndex;
 };
 
 export { pineconeClient };
