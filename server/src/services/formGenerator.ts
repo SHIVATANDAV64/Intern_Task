@@ -64,7 +64,7 @@ export class SemanticMemoryService {
         const body = await resp.text();
         throw new Error(`Pinecone embedding request failed: ${resp.status} ${body}`);
       }
-      const data = await resp.json();
+      const data = await resp.json() as { data?: { values?: number[] }[]; embeddings?: { values?: number[] }[] };
       // Pinecone inference responses may use data[0].values or embeddings[0].values depending on version
       const values = data?.data?.[0]?.values || data?.embeddings?.[0]?.values;
       if (!values) throw new Error('Malformed Pinecone embedding response');
