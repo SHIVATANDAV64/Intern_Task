@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Sparkles, LayoutDashboard, FileText, Settings, LogOut, Plus } from 'lucide-react';
+import { Sparkles, LayoutDashboard, FileText, Settings, LogOut, Plus, Library } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -20,6 +20,7 @@ import { useAuthStore } from '@/store/auth';
 const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/dashboard/forms', label: 'My Forms', icon: FileText },
+  { href: '/dashboard/templates', label: 'Templates', icon: Library },
 ];
 
 export default function DashboardLayout({

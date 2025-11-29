@@ -35,8 +35,80 @@ export default function PublicFormPage({ params }: { params: Promise<{ id: strin
     register,
     handleSubmit,
     control,
+    watch,
     formState: { errors },
   } = useForm();
+
+  const watchedValues = watch();
+  const [visibleFields, setVisibleFields] = useState<Set<string>>(new Set());
+  const [requiredFields, setRequiredFields] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    if (!form) return;
+
+    const allFieldIds = new Set(form.schema.fields.map(f => f.id));
+    const newVisible = new Set(allFieldIds);
+    const newRequired = new Set(form.schema.fields.filter(f => f.required).map(f => f.id));
+
+    if (form.conditionalRules) {
+      form.conditionalRules.forEach(rule => {
+        const triggerField = form.schema.fields.find(f => f.id === rule.fieldId);
+        if (!triggerField) return;
+
+        const triggerValue = watchedValues[triggerField.name];
+        let conditionMet = false;
+
+        switch (rule.condition) {
+          case 'equals':
+            conditionMet = String(triggerValue) === String(rule.value);
+            break;
+          case 'notEquals':
+            conditionMet = String(triggerValue) !== String(rule.value);
+            break;
+          case 'contains':
+            conditionMet = String(triggerValue).includes(String(rule.value));
+            break;
+          case 'greaterThan':
+            conditionMet = Number(triggerValue) > Number(rule.value);
+            break;
+          case 'lessThan':
+            conditionMet = Number(triggerValue) < Number(rule.value);
+            break;
+        }
+
+        if (conditionMet) {
+          rule.targetFieldIds.forEach(targetId => {
+            if (rule.action === 'show') {
+              // Logic: If action is show, we assume fields are hidden by default if a rule targets them? 
+              // Or simpler: If condition met, ensure it's visible.
+              // But usually "Show" implies "Hide otherwise".
+              // For simplicity in this implementation:
+              // We start with all visible. If a rule says "Show X", it implies X might be hidden.
+              // Let's stick to a simpler interpretation:
+              // If action is HIDE, we remove from visible.
+              // If action is SHOW, we add to visible (if it was removed).
+            } else if (rule.action === 'hide') {
+              newVisible.delete(targetId);
+            } else if (rule.action === 'require') {
+              newRequired.add(targetId);
+            } else if (rule.action === 'unrequire') {
+              newRequired.delete(targetId);
+            }
+          });
+        } else {
+           // If condition NOT met, and rule was "Show", maybe we should hide?
+           // This simple engine might need more robust logic (like the backend one), 
+           // but for now let's implement the direct actions.
+           if (rule.action === 'show') {
+             rule.targetFieldIds.forEach(id => newVisible.delete(id));
+           }
+        }
+      });
+    }
+
+    setVisibleFields(newVisible);
+    setRequiredFields(newRequired);
+  }, [form, watchedValues]);
 
   useEffect(() => {
     const fetchForm = async () => {
@@ -408,11 +480,26 @@ export default function PublicFormPage({ params }: { params: Promise<{ id: strin
 
   if (isSubmitted) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-background to-muted flex items-center justify-center p-4">
+      <div 
+        className="min-h-screen flex items-center justify-center p-4"
+        style={{
+          backgroundColor: form?.theme?.secondaryColor || 'hsl(var(--muted))',
+          fontFamily: form?.theme?.fontFamily === 'serif' ? 'serif' : 
+                     form?.theme?.fontFamily === 'mono' ? 'monospace' : 
+                     form?.theme?.fontFamily === 'comic' ? '"Comic Sans MS", cursive, sans-serif' : 
+                     'inherit'
+        }}
+      >
         <Card className="w-full max-w-md text-center">
           <CardHeader>
-            <div className="mx-auto w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mb-4">
-              <Check className="h-8 w-8 text-green-600" />
+            <div 
+              className="mx-auto w-16 h-16 rounded-full flex items-center justify-center mb-4"
+              style={{ backgroundColor: `${form?.theme?.primaryColor || '#10b981'}20` }}
+            >
+              <Check 
+                className="h-8 w-8" 
+                style={{ color: form?.theme?.primaryColor || '#10b981' }}
+              />
             </div>
             <CardTitle>Thank You!</CardTitle>
             <CardDescription>
@@ -430,18 +517,34 @@ export default function PublicFormPage({ params }: { params: Promise<{ id: strin
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-muted py-8 px-4">
+    <div 
+      className="min-h-screen py-8 px-4 transition-colors duration-300"
+      style={{
+        backgroundColor: form.theme?.secondaryColor || 'hsl(var(--muted))',
+        fontFamily: form.theme?.fontFamily === 'serif' ? 'serif' : 
+                   form.theme?.fontFamily === 'mono' ? 'monospace' : 
+                   form.theme?.fontFamily === 'comic' ? '"Comic Sans MS", cursive, sans-serif' : 
+                   'inherit'
+      }}
+    >
       <div className="max-w-2xl mx-auto">
         {/* Header */}
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-4">
-            <Sparkles className="h-5 w-5" />
-            <span className="font-medium">FormGen AI</span>
+            {form.theme?.logoUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={form.theme.logoUrl} alt="Logo" className="h-8 w-auto object-contain" />
+            ) : (
+              <>
+                <Sparkles className="h-5 w-5" style={{ color: form.theme?.primaryColor }} />
+                <span className="font-medium">FormGen AI</span>
+              </>
+            )}
           </Link>
         </div>
 
         {/* Form Card */}
-        <Card>
+        <Card className="border-t-4" style={{ borderTopColor: form.theme?.primaryColor || 'hsl(var(--primary))' }}>
           <CardHeader>
             <CardTitle className="text-2xl">{form.schema.title}</CardTitle>
             {form.schema.description && (
@@ -450,22 +553,34 @@ export default function PublicFormPage({ params }: { params: Promise<{ id: strin
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-              {form.schema.fields.map((field) => (
+              {form.schema.fields.map((field) => {
+                if (!visibleFields.has(field.id)) return null;
+                const isRequired = requiredFields.has(field.id);
+                
+                return (
                 <div key={field.id} className="space-y-2">
                   <Label htmlFor={field.id}>
                     {field.label}
-                    {field.required && <span className="text-destructive ml-1">*</span>}
+                    {isRequired && <span className="text-destructive ml-1">*</span>}
                   </Label>
-                  {renderField(field)}
+                  {renderField({ ...field, required: isRequired })}
                   {errors[field.name] && (
                     <p className="text-sm text-destructive">
                       {errors[field.name]?.message as string}
                     </p>
                   )}
                 </div>
-              ))}
+              )})}
 
-              <Button type="submit" className="w-full" disabled={isSubmitting}>
+              <Button 
+                type="submit" 
+                className="w-full" 
+                disabled={isSubmitting}
+                style={{ 
+                  backgroundColor: form.theme?.primaryColor,
+                  color: form.theme?.primaryColor ? '#ffffff' : undefined
+                }}
+              >
                 {isSubmitting ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -482,7 +597,11 @@ export default function PublicFormPage({ params }: { params: Promise<{ id: strin
         {/* Footer */}
         <p className="text-center text-sm text-muted-foreground mt-8">
           Powered by{' '}
-          <Link href="/" className="text-primary hover:underline">
+          <Link 
+            href="/" 
+            className="hover:underline"
+            style={{ color: form.theme?.primaryColor || 'hsl(var(--primary))' }}
+          >
             FormGen AI
           </Link>
         </p>

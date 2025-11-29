@@ -134,16 +134,47 @@ npm install
 ```
 Create `server/.env`:
 ```env
+# Core
 PORT=5000
-MONGODB_URI=your_mongodb_connection_string
-JWT_SECRET=your_jwt_secret
-GEMINI_API_KEY=your_gemini_key
-PINECONE_API_KEY=your_pinecone_key
+NODE_ENV=development
+ALLOWED_ORIGINS=http://localhost:3000
+
+# Embeddings & AI
+EMBEDDING_PROVIDER=pinecone
+EMBEDDING_MODEL=llama-text-embed-v2
+GEMINI_API_KEY=your_gemini_api_key
+GEMINI_GENERATION_MODEL=gemini-1.5-flash
+
+# Database
+MONGODB_URI=mongodb+srv://<user>:<password>@<cluster>/<db>?retryWrites=true&w=majority
+
+# Auth
+JWT_SECRET=change_me_to_a_strong_random_secret
+
+# Vector DB - Pinecone
+PINECONE_API_KEY=your_pinecone_api_key
 PINECONE_INDEX=form-embeddings
+PINECONE_NAMESPACE=__default__
+PINECONE_TOP_K=5
+
+# Media - Cloudinary
 CLOUDINARY_CLOUD_NAME=your_cloud_name
-CLOUDINARY_API_KEY=your_api_key
-CLOUDINARY_API_SECRET=your_api_secret
-CLIENT_URL=http://localhost:3000
+CLOUDINARY_API_KEY=your_cloudinary_api_key
+CLOUDINARY_API_SECRET=your_cloudinary_api_secret
+
+# Security / Rate Limiting
+RATE_LIMIT_WINDOW_MS=60000
+RATE_LIMIT_MAX=60
+
+# Email (SMTP)
+SMTP_HOST=smtp.yourprovider.com
+SMTP_PORT=587
+SMTP_USER=your_email_username
+SMTP_PASS=your_email_password_or_app_password
+SMTP_FROM=noreply@example.com
+
+# Frontend URL for email links
+FRONTEND_URL=http://localhost:3000
 ```
 Run Server:
 ```bash
@@ -157,6 +188,7 @@ npm install
 ```
 Create `client/.env.local`:
 ```env
+# API URL (Backend)
 NEXT_PUBLIC_API_URL=http://localhost:5000/api
 ```
 Run Client:

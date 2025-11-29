@@ -27,17 +27,32 @@ export default function TemplatesPage() {
   const [using, setUsing] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+
+  const categories = [
+    { id: 'job-application', label: 'Job Application' },
+    { id: 'survey', label: 'Survey' },
+    { id: 'registration', label: 'Registration' },
+    { id: 'feedback', label: 'Feedback' },
+    { id: 'contact', label: 'Contact' },
+  ];
 
   useEffect(() => {
     fetchTemplates();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page]);
+  }, [page, selectedCategory]);
 
   const fetchTemplates = async () => {
     try {
       setLoading(true);
+      const query = new URLSearchParams({
+        page: page.toString(),
+        limit: '12',
+        ...(selectedCategory && { category: selectedCategory }),
+      });
+      
       const response = await api.get<TemplatesResponse>(
-        `/forms/templates/list?page=${page}&limit=12`
+        `/forms/templates/list?${query.toString()}`
       );
       setTemplates(response.data.templates);
       setTotalPages(response.data.pagination.pages);
@@ -93,9 +108,31 @@ export default function TemplatesPage() {
     <div className="container mx-auto py-8 px-4">
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-2">Form Templates</h1>
-        <p className="text-gray-600">
+        <p className="text-gray-600 mb-6">
           Start with a professionally designed template and customize it to your needs
         </p>
+
+        <div className="flex flex-wrap gap-2">
+          <Button 
+            variant={selectedCategory === null ? "default" : "outline"}
+            onClick={() => setSelectedCategory(null)}
+            size="sm"
+            className="rounded-full"
+          >
+            All
+          </Button>
+          {categories.map(cat => (
+            <Button
+              key={cat.id}
+              variant={selectedCategory === cat.id ? "default" : "outline"}
+              onClick={() => setSelectedCategory(cat.id)}
+              size="sm"
+              className="rounded-full"
+            >
+              {cat.label}
+            </Button>
+          ))}
+        </div>
       </div>
 
       {templates.length === 0 ? (

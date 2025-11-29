@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Plus, Trash2, TestTube, Check, X } from 'lucide-react';
+import { Plus, Trash2, TestTube, Check, X, Activity } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Checkbox } from '@/components/ui/checkbox';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { toast } from 'sonner';
 import { api } from '@/lib/api';
 import { Webhook } from '@/types';
@@ -19,14 +20,39 @@ interface WebhookSettingsProps {
   onUpdate: () => void;
 }
 
+interface WebhookLog {
+  _id: string;
+  event: string;
+  status: 'success' | 'failed' | 'retrying';
+  response?: {
+    statusCode: number;
+  };
+  createdAt: string;
+}
+
 export function WebhookSettings({ formId, webhooks = [], onUpdate }: WebhookSettingsProps) {
   const [isAdding, setIsAdding] = useState(false);
+  const [isViewingLogs, setIsViewingLogs] = useState(false);
+  const [logs, setLogs] = useState<WebhookLog[]>([]);
+  const [loadingLogs, setLoadingLogs] = useState(false);
   const [newWebhook, setNewWebhook] = useState({
     url: '',
     secret: '',
     events: ['submission.created'] as string[],
   });
   const [testing, setTesting] = useState<string | null>(null);
+
+  const fetchLogs = async () => {
+    setLoadingLogs(true);
+    try {
+      const response = await api.get<{ logs: WebhookLog[] }>(`/forms/${formId}/webhook-logs`);
+      setLogs(response.data.logs);
+    } catch {
+      toast.error('Failed to fetch logs');
+    } finally {
+      setLoadingLogs(false);
+    }
+  };
 
   const handleAddWebhook = async () => {
     if (!newWebhook.url) {
@@ -95,20 +121,73 @@ export function WebhookSettings({ formId, webhooks = [], onUpdate }: WebhookSett
               Receive HTTP POST requests when form events occur
             </CardDescription>
           </div>
-          <Dialog open={isAdding} onOpenChange={setIsAdding}>
-            <DialogTrigger asChild>
-              <Button size="sm">
-                <Plus className="h-4 w-4 mr-2" />
-                Add Webhook
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Add Webhook</DialogTitle>
-                <DialogDescription>
-                  Configure a webhook endpoint to receive form submission notifications
-                </DialogDescription>
-              </DialogHeader>
+          <div className="flex gap-2">
+            <Dialog open={isViewingLogs} onOpenChange={(open) => {
+              setIsViewingLogs(open);
+              if (open) fetchLogs();
+            }}>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="sm">
+                  <Activity className="mr-2 h-4 w-4" />
+                  View Logs
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-2xl">
+                <DialogHeader>
+                  <DialogTitle>Webhook Delivery Logs</DialogTitle>
+                  <DialogDescription>
+                    Recent webhook delivery attempts and their status.
+                  </DialogDescription>
+                </DialogHeader>
+                <ScrollArea className="h-[400px] mt-4 border rounded-md p-4">
+                  {loadingLogs ? (
+                    <div className="text-center py-8 text-muted-foreground">Loading logs...</div>
+                  ) : logs.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">No logs found.</div>
+                  ) : (
+                    <div className="space-y-4">
+                      {logs.map((log) => (
+                        <div key={log._id} className="flex items-center justify-between border-b pb-2 last:border-0">
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <Badge variant={log.status === 'success' ? 'default' : log.status === 'failed' ? 'destructive' : 'secondary'}>
+                                {log.status}
+                              </Badge>
+                              <span className="font-medium text-sm">{log.event}</span>
+                            </div>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              {new Date(log.createdAt).toLocaleString()}
+                            </p>
+                          </div>
+                          <div className="text-right text-sm">
+                            {log.response?.statusCode && (
+                              <span className={`font-mono ${log.response.statusCode >= 200 && log.response.statusCode < 300 ? 'text-green-600' : 'text-red-600'}`}>
+                                {log.response.statusCode}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </ScrollArea>
+              </DialogContent>
+            </Dialog>
+
+            <Dialog open={isAdding} onOpenChange={setIsAdding}>
+              <DialogTrigger asChild>
+                <Button size="sm">
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add Webhook
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Add Webhook</DialogTitle>
+                  <DialogDescription>
+                    Configure a webhook endpoint to receive form submission notifications
+                  </DialogDescription>
+                </DialogHeader>
               <div className="space-y-4">
                 <div>
                   <Label htmlFor="webhook-url">Webhook URL</Label>

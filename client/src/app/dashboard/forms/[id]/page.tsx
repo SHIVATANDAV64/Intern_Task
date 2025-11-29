@@ -2,8 +2,9 @@
 
 import { useEffect, useState, use } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { ArrowLeft, Copy, ExternalLink, Users, FileText, Download } from 'lucide-react';
+import { ArrowLeft, Copy, ExternalLink, Users, FileText, Download, Settings, CopyPlus } from 'lucide-react';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
@@ -15,9 +16,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import { formsApi } from '@/lib/api';
 import { Form, Submission } from '@/types';
+import { EmailSettings } from '@/components/EmailSettings';
+import { WebhookSettings } from '@/components/WebhookSettings';
+import { ThemeSettings } from '@/components/ThemeSettings';
+import { LogicSettings } from '@/components/LogicSettings';
 
 export default function FormDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
+  const router = useRouter();
   const [form, setForm] = useState<Form | null>(null);
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -49,6 +55,16 @@ export default function FormDetailPage({ params }: { params: Promise<{ id: strin
     fetchForm();
     fetchSubmissions();
   }, [id]);
+
+  const handleDuplicate = async () => {
+    try {
+      const response = await formsApi.duplicate(id);
+      toast.success('Form duplicated successfully');
+      router.push(`/dashboard/forms/${response.form.id}`);
+    } catch {
+      toast.error('Failed to duplicate form');
+    }
+  };
 
   const copyShareLink = () => {
     const link = `${window.location.origin}/form/${id}`;
@@ -131,6 +147,10 @@ export default function FormDetailPage({ params }: { params: Promise<{ id: strin
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={handleDuplicate}>
+            <CopyPlus className="mr-2 h-4 w-4" />
+            Duplicate
+          </Button>
           <Button variant="outline" onClick={copyShareLink}>
             <Copy className="mr-2 h-4 w-4" />
             Copy Link
@@ -181,6 +201,7 @@ export default function FormDetailPage({ params }: { params: Promise<{ id: strin
         <TabsList>
           <TabsTrigger value="submissions">Submissions</TabsTrigger>
           <TabsTrigger value="schema">Form Schema</TabsTrigger>
+          <TabsTrigger value="settings">Settings</TabsTrigger>
         </TabsList>
 
         <TabsContent value="submissions" className="space-y-4">
@@ -292,6 +313,39 @@ export default function FormDetailPage({ params }: { params: Promise<{ id: strin
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="settings" className="space-y-6">
+          <EmailSettings 
+            formId={id} 
+            emailNotifications={form.emailNotifications} 
+            onUpdate={() => {
+              // Refresh form data
+              formsApi.getById(id).then(res => setForm(res.form));
+            }} 
+          />
+          <ThemeSettings 
+            formId={id} 
+            theme={form.theme} 
+            onUpdate={() => {
+              formsApi.getById(id).then(res => setForm(res.form));
+            }} 
+          />
+          <LogicSettings 
+            formId={id} 
+            fields={form.schema.fields}
+            rules={form.conditionalRules}
+            onUpdate={() => {
+              formsApi.getById(id).then(res => setForm(res.form));
+            }} 
+          />
+          <WebhookSettings 
+            formId={id} 
+            webhooks={form.webhooks || []}
+            onUpdate={() => {
+              formsApi.getById(id).then(res => setForm(res.form));
+            }}
+          />
         </TabsContent>
       </Tabs>
     </div>

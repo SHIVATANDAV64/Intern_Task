@@ -214,12 +214,15 @@ router.put(
         return;
       }
 
-      const { title, description, schema, isPublic } = req.body;
+      const { title, description, schema, isPublic, theme, conditionalRules, emailNotifications } = req.body;
 
       if (title) form.title = title;
       if (description !== undefined) form.description = description;
       if (schema) form.formSchema = schema;
       if (isPublic !== undefined) form.isPublic = isPublic;
+      if (theme) form.theme = theme;
+      if (conditionalRules) form.conditionalRules = conditionalRules;
+      if (emailNotifications) form.emailNotifications = emailNotifications;
 
       await form.save();
 
