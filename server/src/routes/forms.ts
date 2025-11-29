@@ -175,6 +175,10 @@ router.get(
           submissionCount: form.submissionCount,
           createdAt: form.createdAt,
           isOwner,
+          theme: form.theme,
+          emailNotifications: form.emailNotifications,
+          webhooks: form.webhooks,
+          conditionalRules: form.conditionalRules,
         },
       });
     } catch (error) {
@@ -214,7 +218,7 @@ router.put(
         return;
       }
 
-      const { title, description, schema, isPublic, theme, conditionalRules, emailNotifications } = req.body;
+      const { title, description, schema, isPublic, theme, conditionalRules, emailNotifications, webhooks } = req.body;
 
       if (title) form.title = title;
       if (description !== undefined) form.description = description;
@@ -223,6 +227,7 @@ router.put(
       if (theme) form.theme = theme;
       if (conditionalRules) form.conditionalRules = conditionalRules;
       if (emailNotifications) form.emailNotifications = emailNotifications;
+      if (webhooks) form.webhooks = webhooks;
 
       await form.save();
 
@@ -234,6 +239,10 @@ router.put(
           description: form.description,
           schema: form.formSchema,
           isPublic: form.isPublic,
+          theme: form.theme,
+          emailNotifications: form.emailNotifications,
+          webhooks: form.webhooks,
+          conditionalRules: form.conditionalRules,
         },
       });
     } catch (error) {

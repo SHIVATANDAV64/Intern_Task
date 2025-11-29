@@ -45,32 +45,44 @@ export class SemanticMemoryService {
 
   /**
    * Generate embedding for text using Gemini's embedding model
+   * Falls back to Gemini if Pinecone is unavailable
    */
   async generateEmbedding(text: string): Promise<number[]> {
     // If switching to Pinecone-hosted embedding model
     if (process.env.EMBEDDING_PROVIDER === 'pinecone') {
-      const model = process.env.EMBEDDING_MODEL || 'llama-text-embed-v2';
-      const apiKey = process.env.PINECONE_API_KEY;
-      if (!apiKey) throw new Error('PINECONE_API_KEY is required for Pinecone embeddings');
-      const resp = await fetch('https://api.pinecone.io/inference/v1/embed', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Api-Key': apiKey,
-        },
-        body: JSON.stringify({ model, inputs: [text] }),
-      });
-      if (!resp.ok) {
-        const body = await resp.text();
-        throw new Error(`Pinecone embedding request failed: ${resp.status} ${body}`);
+      try {
+        const model = process.env.EMBEDDING_MODEL || 'llama-text-embed-v2';
+        const apiKey = process.env.PINECONE_API_KEY;
+        if (!apiKey) throw new Error('PINECONE_API_KEY is required for Pinecone embeddings');
+        const resp = await fetch('https://api.pinecone.io/inference/v1/embed', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Api-Key': apiKey,
+          },
+          body: JSON.stringify({ model, inputs: [text] }),
+        });
+        if (!resp.ok) {
+          const body = await resp.text();
+          console.warn(`Pinecone embedding failed (${resp.status}), falling back to Gemini:`, body);
+          // Fall through to Gemini embedding
+        } else {
+          const data = await resp.json() as { data?: { values?: number[] }[]; embeddings?: { values?: number[] }[] };
+          // Pinecone inference responses may use data[0].values or embeddings[0].values depending on version
+          const values = data?.data?.[0]?.values || data?.embeddings?.[0]?.values;
+          if (!values) {
+            console.warn('Malformed Pinecone embedding response, falling back to Gemini');
+            // Fall through to Gemini embedding
+          } else {
+            return values;
+          }
+        }
+      } catch (error) {
+        console.warn('Pinecone embedding error, falling back to Gemini:', error);
+        // Fall through to Gemini embedding
       }
-      const data = await resp.json() as { data?: { values?: number[] }[]; embeddings?: { values?: number[] }[] };
-      // Pinecone inference responses may use data[0].values or embeddings[0].values depending on version
-      const values = data?.data?.[0]?.values || data?.embeddings?.[0]?.values;
-      if (!values) throw new Error('Malformed Pinecone embedding response');
-      return values;
     }
-    // Default Gemini embedding path
+    // Default Gemini embedding path (or fallback)
     const client = getGeminiClient();
     const response = await client.models.embedContent({
       model: this.embeddingModel,
@@ -82,6 +94,7 @@ export class SemanticMemoryService {
 
   /**
    * Store form embedding in Pinecone for future retrieval
+   * Gracefully handles errors without breaking form creation
    */
   async storeFormEmbedding(
     formId: string,
@@ -109,8 +122,9 @@ export class SemanticMemoryService {
 
       console.log(`✅ Stored embedding for form ${formId}`);
     } catch (error) {
-      console.error('Error storing form embedding:', error);
+      console.warn('⚠️  Error storing form embedding (non-critical):', error instanceof Error ? error.message : error);
       // Don't throw - embedding storage failure shouldn't break form creation
+      // The app will continue working, just without semantic memory for this form
     }
   }
 
